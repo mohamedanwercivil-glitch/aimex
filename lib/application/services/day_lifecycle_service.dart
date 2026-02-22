@@ -26,6 +26,19 @@ class DayLifecycleService {
   DaySession get currentSession => _currentSession;
   bool get isDayOpen => _currentSession.isOpen;
 
+  /// =========================
+  /// NEW GETTER FOR UI
+  /// =========================
+  Map<String, double> get currentBalances {
+    final Map<String, double> result = {};
+
+    _currentSession.currentBalances.forEach((cashBoxId, money) {
+      result[cashBoxId.value] = money.amount;
+    });
+
+    return result;
+  }
+
   Money _salesReceived = Money.zero();
   Money _customerPayments = Money.zero();
   Money _supplierPayments = Money.zero();
@@ -76,12 +89,10 @@ class DayLifecycleService {
     _ensureDayOpen();
     invoice.validateBeforeSave();
 
-    // خصم من المخزون
     for (final item in invoice.items) {
       inventory.decreaseStock(item.productName, item.quantity);
     }
 
-    // إضافة للخزنة لو فيه دفع
     if (invoice.paidAmount.amount > 0 && toCashBox != null) {
       addToCashBox(toCashBox, invoice.paidAmount);
       _salesReceived = _salesReceived.add(invoice.paidAmount);
@@ -101,7 +112,6 @@ class DayLifecycleService {
     _ensureDayOpen();
     invoice.validateBeforeSave();
 
-    // زيادة المخزون
     for (final item in invoice.items) {
       inventory.increaseStock(
         item.productName,
@@ -110,7 +120,6 @@ class DayLifecycleService {
       );
     }
 
-    // خصم من الخزنة لو فيه دفع
     if (invoice.paidAmount.amount > 0 && fromCashBox != null) {
       deductFromCashBox(fromCashBox, invoice.paidAmount);
       _supplierPayments = _supplierPayments.add(invoice.paidAmount);
