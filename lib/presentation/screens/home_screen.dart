@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../application/services/day_lifecycle_service.dart';
+import 'open_day_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final DayLifecycleService dayService;
@@ -17,7 +18,6 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final isOpen = widget.dayService.isDayOpen;
-
     final balances = widget.dayService.currentBalances;
     final total = balances.values.fold<double>(0, (a, b) => a + b);
 
@@ -58,36 +58,24 @@ class _HomeScreenState extends State<HomeScreen> {
             style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 12),
-
           Wrap(
             spacing: 8,
             runSpacing: 8,
             children: balances.entries.map((e) {
-              return _cashBox(e.key, _format(e.value), _colorForCash(e.key));
+              return _cashBox(e.key, _format(e.value));
             }).toList(),
-          ),
-
-          const SizedBox(height: 12),
-
-          ElevatedButton(
-            onPressed: () {},
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blueGrey,
-              minimumSize: const Size(double.infinity, 40),
-            ),
-            child: const Text("تحويل الأموال"),
           ),
         ],
       ),
     );
   }
 
-  Widget _cashBox(String title, String amount, Color color) {
+  Widget _cashBox(String title, String amount) {
     return Container(
       width: 110,
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: color,
+        color: Colors.blueGrey,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -110,28 +98,45 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildStartDayButton(bool isOpen) {
     return GestureDetector(
-      onTap: isOpen ? null : () {},
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 20),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFF4FACFE), Color(0xFF00F2FE)],
+      onTap: isOpen
+          ? null
+          : () async {
+        final result = await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) =>
+                OpenDayScreen(dayService: widget.dayService),
           ),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: const Column(
-          children: [
-            Icon(Icons.wb_sunny, size: 40, color: Colors.white),
-            SizedBox(height: 8),
-            Text(
-              "بداية اليوم",
-              style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold),
+        );
+
+        if (result == true) {
+          setState(() {});
+        }
+      },
+      child: Opacity(
+        opacity: isOpen ? 0.5 : 1,
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 20),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFF4FACFE), Color(0xFF00F2FE)],
             ),
-          ],
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: const Column(
+            children: [
+              Icon(Icons.wb_sunny, size: 40, color: Colors.white),
+              SizedBox(height: 8),
+              Text(
+                "بداية اليوم",
+                style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -186,7 +191,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildEndDayButton(bool isOpen) {
     return ElevatedButton(
-      onPressed: isOpen ? () {} : null,
+      onPressed: isOpen
+          ? () {
+        widget.dayService.closeDay();
+        setState(() {});
+      }
+          : null,
       style: ElevatedButton.styleFrom(
         backgroundColor: Colors.red,
         minimumSize: const Size(double.infinity, 50),
@@ -200,15 +210,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   String _format(double value) {
     return value.toStringAsFixed(0);
-  }
-
-  Color _colorForCash(String name) {
-    if (name.contains("32")) return Colors.blue;
-    if (name.contains("57")) return Colors.red;
-    if (name.contains("وي")) return Colors.green;
-    if (name.contains("015")) return Colors.orange;
-    if (name.contains("عمر")) return Colors.purple;
-    return Colors.grey;
   }
 
   BoxDecoration _cardDecoration() {
