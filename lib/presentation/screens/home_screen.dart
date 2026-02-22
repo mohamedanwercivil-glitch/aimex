@@ -97,10 +97,11 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildStartDayButton(bool isOpen) {
+    final enabled = !isOpen;
+
     return GestureDetector(
-      onTap: isOpen
-          ? null
-          : () async {
+      onTap: enabled
+          ? () async {
         final result = await Navigator.push(
           context,
           MaterialPageRoute(
@@ -112,9 +113,10 @@ class _HomeScreenState extends State<HomeScreen> {
         if (result == true) {
           setState(() {});
         }
-      },
+      }
+          : null,
       child: Opacity(
-        opacity: isOpen ? 0.5 : 1,
+        opacity: enabled ? 1 : 0.5,
         child: Container(
           width: double.infinity,
           padding: const EdgeInsets.symmetric(vertical: 20),
